@@ -18,10 +18,8 @@
 					"raw": "{\n    \"type\": \"market\",\n    \"side\": \"buy\",\n    \"token\": \"SOL\",\n    \"amount\": 15.5\n}"
 				},
 				"url": {
-					"raw": "http://localhost:3000/api/orders/execute",
-					"protocol": "http",
-					"host": ["localhost"],
-					"port": "3000",
+					"raw": "{{baseUrl}}/api/orders/execute",
+					"host": ["{{baseUrl}}"],
 					"path": ["api", "orders", "execute"]
 				}
 			},
@@ -33,14 +31,19 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:3000/api/health",
-					"protocol": "http",
-					"host": ["localhost"],
-					"port": "3000",
+					"raw": "{{baseUrl}}/api/health",
+					"host": ["{{baseUrl}}"],
 					"path": ["api", "health"]
 				}
 			},
 			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "https://worthy-rachele-shashankshri10-0a36b351.koyeb.app",
+			"type": "string"
 		}
 	]
 }
