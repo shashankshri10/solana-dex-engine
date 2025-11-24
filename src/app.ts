@@ -1,4 +1,4 @@
-import fastify from 'fastify';
+import fastify, { FastifyRequest } from 'fastify';
 import websocket from '@fastify/websocket';
 import cors from '@fastify/cors';
 import { env } from './config/env';
@@ -11,29 +11,46 @@ const app = fastify({ logger: true });
 app.register(cors);
 app.register(websocket);
 
-// Start Worker (In same process for demo simplicity, usually separate)
+// Start Worker
 setupWorker();
 
-// Redis Subscriber for WS broadcasts
+// Redis Subscriber
 redisSub.subscribe('order-updates');
 
 // WebSocket Logic
 app.register(async (fastify) => {
-  fastify.get('/ws', { websocket: true }, (connection, req) => {
+  // @ts-ignore: Bypassing strict types to handle Docker runtime variance
+  fastify.get('/ws', { websocket: true }, (connection: any, req: any) => {
+    
+    // --- CRITICAL FIX ---
+    // Detect if we received the 'SocketStream' wrapper OR the raw 'WebSocket'
+    const socket = connection.socket || connection;
+    
     console.log('Client connected');
 
     const handleUpdate = (channel: string, message: string) => {
       if (channel === 'order-updates') {
-        const data = JSON.parse(message);
-        // In real app, check if this client owns this orderId
-        connection.socket.send(JSON.stringify(data));
+        try {
+          const data = JSON.parse(message);
+          // Only send if the socket is actually OPEN (readyState 1)
+          if (socket.readyState === 1) {
+            socket.send(JSON.stringify(data));
+          }
+        } catch (err) {
+          console.error('WS Broadcast Error:', err);
+        }
       }
     };
 
     redisSub.on('message', handleUpdate);
 
-    connection.socket.on('close', () => {
+    // Bind listeners to the actual socket object 
+    socket.on('close', () => {
       redisSub.off('message', handleUpdate);
+    });
+
+    socket.on('error', (err: any) => {
+      console.error('WS Client Error:', err);
     });
   });
 });
