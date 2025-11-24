@@ -1,33 +1,128 @@
-# 🚀 Solana Order Execution Engine (Mock)
+# ⚡ Solana DEX Order Execution Engine
 
-A high-performance, asynchronous order execution engine built with Node.js, Fastify, and BullMQ. This system mimics a Solana DEX router, handling order queuing, price routing (Raydium vs. Meteora), and real-time WebSocket updates.
+![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
+![Fastify](https://img.shields.io/badge/Fastify-000000?style=for-the-badge&logo=fastify&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![Redis](https://img.shields.io/badge/redis-%23DD0031.svg?style=for-the-badge&logo=redis&logoColor=white)
 
-## 📋 Features
+A high-performance, containerized order execution engine that mimics a Solana DEX router. It handles concurrent order processing, routes trades between Raydium and Meteora based on best price, and streams real-time updates via WebSockets.
 
-*   **Hybrid Architecture:** REST API for order submission + WebSockets for real-time status streaming.
-*   **Asynchronous Processing:** Uses **BullMQ** (Redis) to decouple HTTP ingress from heavy order processing logic.
-*   **Concurrency Control:** Limits execution to 10 concurrent orders to prevent rate-limiting, with automatic exponential backoff.
-*   **Mock DEX Routing:** Simulates network latency (2-3s) and price variance between Raydium and Meteora.
-*   **Robust Data:** PostgreSQL for persistent order history and Redis for active queue management.
+**Live Demo URL:** [Your Bit.ly Link Here]  
+**Video Walkthrough:** [Your YouTube Link Here]
 
-## 🛠️ Tech Stack
-
-*   **Runtime:** Node.js + TypeScript
-*   **Server:** Fastify (w/ @fastify/websocket)
-*   **Queue:** BullMQ + Redis
-*   **Database:** PostgreSQL (via Drizzle ORM)
-*   **Containerization:** Docker & Docker Compose
+---
 
 ## 🏗️ Architecture
 
+The system uses a producer-consumer pattern to handle high-throughput trading without blocking the main API thread.
+
 ```mermaid
-graph LR
-    Client[Client] -- POST /execute --> API[Fastify API]
-    Client -- WebSocket --> WS[WebSocket Server]
-    API -- Add Job --> Queue[Redis Queue]
-    Queue -- Process --> Worker[Order Worker]
-    Worker -- Query --> Router[Mock DEX Router]
-    Worker -- Update DB --> Postgres[(PostgreSQL)]
-    Worker -- Pub Event --> RedisPub[Redis Pub/Sub]
-    RedisPub -- Sub Event --> WS
-    WS -- Push Update --> Client
+graph TD
+    Client[User / Client]
+    API[Fastify API Gateway]
+    Queue[Redis Queue (BullMQ)]
+    Worker[Order Worker]
+    Router[Mock DEX Router]
+    DB[(PostgreSQL)]
+    PubSub[Redis Pub/Sub]
+    
+    Client -- "POST /execute" --> API
+    Client -- "WebSocket Connect" --> API
+    API -- "Add Job" --> Queue
+    Queue -- "Process Job" --> Worker
+    Worker -- "Get Quote" --> Router
+    Router -- "Best Price" --> Worker
+    Worker -- "Save Status" --> DB
+    Worker -- "Publish Update" --> PubSub
+    PubSub -- "Stream Event" --> API
+    API -- "Push Update" --> Client
+```
+
+## 🌟 Key Features
+
+*   **Smart Routing:** Automatically checks mocked pools (Raydium vs. Meteora) and routes to the best price/liquidity.
+*   **Concurrency Control:** Uses **BullMQ** to limit execution to 10 concurrent orders, protecting against rate limits.
+*   **Real-Time Streaming:** Custom WebSocket implementation using Redis Pub/Sub to bridge stateless workers with connected clients.
+*   **Dockerized:** Fully isolated environment with internal networking for API, Postgres, and Redis.
+*   **Resilient:** Exponential backoff strategies for failed transactions.
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+*   Docker & Docker Compose
+*   Node.js v18+ (for local testing)
+
+### 1. Setup & Installation
+We use a `make.sh` helper to handle the container lifecycle and database migrations.
+
+```bash
+# Clone the repo
+git clone https://github.com/YOUR_USERNAME/solana-dex-engine.git
+cd solana-dex-engine
+
+# Make script executable
+chmod +x make.sh
+
+# Build containers and run migrations
+./make.sh setup
+```
+
+### 2. Start the Engine
+```bash
+./make.sh start
+```
+*   API: `http://localhost:3000`
+*   WebSocket: `ws://localhost:3000/ws`
+
+---
+
+## 🧪 Testing & Demo
+
+### Run the Concurrent Demo
+We have included a script that simulates **5 simultaneous users** firing orders to demonstrate the queue and routing logic.
+
+```bash
+npx tsx scripts/demo-concurrent.ts
+```
+
+### Run Unit Tests
+Includes 11 tests covering Router logic, Worker lifecycle, and Input validation.
+```bash
+./make.sh test
+```
+
+### API Endpoints
+
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `POST` | `/api/orders/execute` | Submit a Market/Limit order. |
+| `GET` | `/api/health` | Check system status. |
+| `WS` | `/ws` | Connect for real-time order updates. |
+
+---
+
+## 🧠 Design Decisions
+
+1.  **Why Fastify over Express?**
+    *   Fastify provides significantly lower overhead and better async performance, which is critical for high-frequency trading applications.
+
+2.  **Why BullMQ (Redis)?**
+    *   Direct HTTP processing would time out under load. A queue allows us to ingest thousands of orders instantly (`pending`) and process them at a controlled rate (`concurrency: 10`), matching the RPC rate limits of Solana nodes.
+
+3.  **WebSocket Architecture**
+    *   Since the Worker runs in a separate process/container from the WebSocket server, they cannot share memory. I implemented a **Redis Pub/Sub** pattern where the Worker publishes events (`order-updates`) and the API server subscribes and forwards them to the specific client.
+
+---
+
+## 📂 Project Structure
+```text
+src/
+├── api/             # HTTP Routes
+├── services/        # Business Logic (Queue, Router, DB)
+├── workers/         # BullMQ Worker Processor
+├── models/          # Database Schema (Drizzle)
+├── tests/           # Vitest Unit Tests
+└── app.ts           # Entry Point
+```

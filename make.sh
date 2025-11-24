@@ -15,7 +15,6 @@ case "$1" in
     sleep 5
     
     echo -e "${GREEN}🗄️ Running Migrations (inside container)...${NC}"
-    # We run the migration using the same environment context as the app
     docker-compose run --rm \
       -e DATABASE_URL=postgres://admin:password@postgres:5432/dex_engine \
       api npm run db:migrate
