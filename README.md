@@ -7,8 +7,8 @@
 
 A high-performance, containerized order execution engine that mimics a Solana DEX router. It handles concurrent order processing, routes trades between Raydium and Meteora based on best price, and streams real-time updates via WebSockets.
 
-**Live Demo URL:** [Your Bit.ly Link Here]  
-**Video Walkthrough:** [Your YouTube Link Here]
+**Live Demo URL:**  
+**Video Walkthrough:** 
 
 ---
 
