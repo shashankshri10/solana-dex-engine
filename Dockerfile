@@ -23,5 +23,5 @@ COPY drizzle.config.docker.js ./drizzle.config.js
 # Expose API port
 EXPOSE 3000
 
-# Start command
-CMD ["node", "dist/app.js"]
+# Start command (Run migrations -> Then start app)
+CMD ["sh", "-c", "npm run db:migrate && node dist/app.js"]
