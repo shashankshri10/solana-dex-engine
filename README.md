@@ -20,23 +20,25 @@ The system uses a producer-consumer pattern to handle high-throughput trading wi
 graph TD
     Client[User / Client]
     API[Fastify API Gateway]
-    Queue[Redis Queue (BullMQ)]
+    Queue[Redis Queue - BullMQ]
     Worker[Order Worker]
     Router[Mock DEX Router]
     DB[(PostgreSQL)]
-    PubSub[Redis Pub/Sub]
+    PubSub[Redis PubSub]
     
-    Client -- "POST /execute" --> API
-    Client -- "WebSocket Connect" --> API
-    API -- "Add Job" --> Queue
-    Queue -- "Process Job" --> Worker
-    Worker -- "Get Quote" --> Router
-    Router -- "Best Price" --> Worker
-    Worker -- "Save Status" --> DB
-    Worker -- "Publish Update" --> PubSub
-    PubSub -- "Stream Event" --> API
-    API -- "Push Update" --> Client
+    Client -->|POST /execute| API
+    Client -->|WebSocket Connect| API
+    API -->|Add Job| Queue
+    Queue -->|Process Job| Worker
+    Worker -->|Get Quote| Router
+    Router -->|Best Price| Worker
+    Worker -->|Save Status| DB
+    Worker -->|Publish Update| PubSub
+    PubSub -->|Stream Event| API
+    API -->|Push Update| Client
 ```
+
+---
 
 ## 🌟 Key Features
 
