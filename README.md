@@ -61,7 +61,7 @@ We use a `make.sh` helper to handle the container lifecycle and database migrati
 
 ```bash
 # Clone the repo
-git clone https://github.com/YOUR_USERNAME/solana-dex-engine.git
+git clone https://github.com/shashankshri10/solana-dex-engine.git
 cd solana-dex-engine
 
 # Make script executable
