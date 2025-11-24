@@ -1,0 +1,46 @@
+{
+	"info": {
+		"_postman_id": "solana-dex-engine",
+		"name": "Solana DEX Engine",
+		"description": "API collection for Backend Task 2",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Execute Market Order",
+			"request": {
+				"method": "POST",
+				"header": [
+					{ "key": "Content-Type", "value": "application/json" }
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"type\": \"market\",\n    \"side\": \"buy\",\n    \"token\": \"SOL\",\n    \"amount\": 15.5\n}"
+				},
+				"url": {
+					"raw": "http://localhost:3000/api/orders/execute",
+					"protocol": "http",
+					"host": ["localhost"],
+					"port": "3000",
+					"path": ["api", "orders", "execute"]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Health Check",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/api/health",
+					"protocol": "http",
+					"host": ["localhost"],
+					"port": "3000",
+					"path": ["api", "health"]
+				}
+			},
+			"response": []
+		}
+	]
+}
